@@ -22,3 +22,17 @@ $ sqlite3 --version
 ```
 
 macOS에 설치된 SQLite CLI를 사용합니다.
+
+## 스키마와 샘플 데이터
+
+```bash
+$ sqlite3 -bail ../lab/library.db < schema.sql && sqlite3 -bail ../lab/library.db < seed.sql && sqlite3 -header -column ../lab/library.db "SELECT 'category' AS table_name, COUNT(*) AS rows FROM category UNION ALL SELECT 'member',COUNT(*) FROM member UNION ALL SELECT 'book',COUNT(*) FROM book UNION ALL SELECT 'rental',COUNT(*) FROM rental;"
+table_name  rows
+----------  ----
+category    10  
+member      10  
+book        12  
+rental      12  
+```
+
+카테고리와 회원은 각각 10행, 도서와 대여 기록은 각각 12행입니다. 부모 테이블부터 입력하고 FK가 연결되는 순서를 유지했습니다.
