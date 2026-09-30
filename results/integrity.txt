@@ -1,0 +1,13 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys=ON;
+Runtime error near line 2: FOREIGN KEY constraint failed (19)
+INSERT INTO book(id,title,author,category_id,replacement_cost) VALUES(99,'없는 카테고리','테스트',999,10000);
+exit=1
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys=ON; SELECT 'category' AS table_name,COUNT(*) AS rows FROM category UNION ALL SELECT 'member',COUNT(*) FROM member UNION ALL SELECT 'book',COUNT(*) FROM book UNION ALL SELECT 'rental',COUNT(*) FROM rental; PRAGMA foreign_key_check;
+table_name  rows
+----------  ----
+category    10  
+member      10  
+book        12  
+rental      11  

@@ -328,3 +328,46 @@ EXPLAIN QUERY PLAN SELECT id FROM rental WHERE member_id = 2 AND status = 'overd
 QUERY PLAN
 `--SEARCH rental USING COVERING INDEX idx_rental_member_status (member_id=? AND status=?)
 ```
+
+## FK 오류와 최종 데이터 수
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys=ON;
+Runtime error near line 2: FOREIGN KEY constraint failed (19)
+INSERT INTO book(id,title,author,category_id,replacement_cost) VALUES(99,'없는 카테고리','테스트',999,10000);
+exit=1
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys=ON; SELECT 'category' AS table_name,COUNT(*) AS rows FROM category UNION ALL SELECT 'member',COUNT(*) FROM member UNION ALL SELECT 'book',COUNT(*) FROM book UNION ALL SELECT 'rental',COUNT(*) FROM rental; PRAGMA foreign_key_check;
+table_name  rows
+----------  ----
+category    10  
+member      10  
+book        12  
+rental      11  
+```
+
+FK에 없는 카테고리를 입력하면 제약 위반으로 거부됩니다. 삭제 쿼리 후에도 모든 테이블에 10행 이상이 남아 있습니다. foreign_key_check는 위반 행이 있을 때만 결과를 반환합니다.
+
+## 테이블 관계와 쿼리 해석
+
+회원의 연락처, 도서의 분류와 대여 상태는 변경 주기가 다르므로 테이블을 나눴습니다. 대여할 때마다 회원 이름이나 도서 제목을 복사하면 같은 값을 여러 행에서 수정해야 합니다. PK는 각 행의 id, FK는 다른 테이블의 행을 참조하는 id입니다. 회원 한 명과 도서 한 권은 여러 대여 기록에 연결되며, 카테고리 하나에는 여러 도서가 속합니다.
+
+```mermaid
+erDiagram
+    category ||--o{ book : classifies
+    member ||--o{ rental : borrows
+    book ||--o{ rental : records
+```
+
+id와 대체 구입비는 INTEGER, 이름과 상태는 TEXT입니다. 날짜는 SQLite의 고정 DATE 저장형 대신 ISO 형식 TEXT를 사용합니다. 같은 형식이므로 문자열 순서로 날짜 범위를 비교할 수 있습니다. email과 category.name의 UNIQUE는 중복 식별값을 막고 NOT NULL은 필수값 누락을 막습니다. 기록이 연결된 부모는 RESTRICT로 삭제를 막아 대여 이력을 유지합니다.
+
+INNER JOIN은 연결된 행만 반환합니다. Q07의 LEFT JOIN은 대여가 없는 회원09/10도 포함하고 대여 id가 NULL입니다. Q09에서 COUNT(*) 대신 COUNT(r.id)를 사용한 이유는 NULL 행을 대여 1건으로 세지 않기 위해서입니다. GROUP BY는 회원/카테고리별 행을 모아 COUNT, SUM, AVG를 적용합니다.
+
+Q11은 먼저 반납 기록만 고르고, 반납일과 대여일을 julianday로 변환해 차이를 구한 후 회원별 평균을 계산합니다. 미반납 행은 NULL이므로 제외했습니다. FK를 정의하는 것만으로 SQLite에서 검증이 켜지지 않아 연결마다 PRAGMA를 지정해야 했습니다. 없는 참조를 넣는 테스트로 적용을 확인했습니다.
+
+SELECT는 조회, INSERT는 새 행 추가, UPDATE는 상태 수정, DELETE는 보관 기간이 지난 기록 제거에 사용했습니다. Q15의 인덱스는 회원별 특정 상태를 찾는 조건에 맞춘 복합 인덱스입니다. 모든 행을 읽는 대신 인덱스로 후보를 찾으며 쓰기 비용과 저장 공간은 늘어납니다.
+
+엑셀에서도 행을 연결할 수 있지만 DB는 FK와 제약조건으로 잘못된 참조를 거부하고 여러 변경을 트랜잭션으로 묶을 수 있습니다. seed.sql은 BEGIN/COMMIT으로 부모와 자식의 입력을 한 작업으로 처리합니다.
+
+SQLite FK 활성화 정책은 [공식 문서](https://www.sqlite.org/foreignkeys.html)에 설명되어 있습니다.
