@@ -1,0 +1,14 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q01: 대체 구입비 25,000원 이상 도서를 금액 순으로 조회합니다.
+SELECT id, title, replacement_cost FROM book
+WHERE replacement_cost >= 25000 ORDER BY replacement_cost DESC, id;
+id  title      replacement_cost
+--  ---------  ----------------
+2   운영체제 입문    30000           
+11  Python 활용  29000           
+4   네트워크 원리    28000           
+12  SQL 연습     27000           
+5   자료구조 연습    26000           
+1   Python 기초  25000           
+

@@ -1,0 +1,10 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q03: 최근 가입한 회원 3명을 조회합니다.
+SELECT id, name, joined_at FROM member ORDER BY joined_at DESC, id DESC LIMIT 3;
+id  name  joined_at 
+--  ----  ----------
+10  회원10  2026-09-04
+9   회원09  2026-09-03
+8   회원08  2026-09-02
+

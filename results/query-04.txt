@@ -1,0 +1,11 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q04: 2026-09-30 기준 미반납 연체 후보를 조회합니다.
+SELECT id, member_id, book_id, due_at FROM rental
+WHERE returned_at IS NULL AND due_at < '2026-09-30' ORDER BY due_at;
+id  member_id  book_id  due_at    
+--  ---------  -------  ----------
+3   2          2        2026-09-19
+9   8          9        2026-09-22
+7   6          7        2026-09-26
+

@@ -36,3 +36,67 @@ rental      12
 ```
 
 카테고리와 회원은 각각 10행, 도서와 대여 기록은 각각 12행입니다. 부모 테이블부터 입력하고 FK가 연결되는 순서를 유지했습니다.
+
+### Q01
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q01: 대체 구입비 25,000원 이상 도서를 금액 순으로 조회합니다.
+SELECT id, title, replacement_cost FROM book
+WHERE replacement_cost >= 25000 ORDER BY replacement_cost DESC, id;
+id  title      replacement_cost
+--  ---------  ----------------
+2   운영체제 입문    30000           
+11  Python 활용  29000           
+4   네트워크 원리    28000           
+12  SQL 연습     27000           
+5   자료구조 연습    26000           
+1   Python 기초  25000           
+
+```
+
+### Q02
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q02: Python 제목이 포함된 도서를 검색합니다.
+SELECT id, title FROM book WHERE title LIKE '%Python%' ORDER BY id;
+id  title    
+--  ---------
+1   Python 기초
+11  Python 활용
+
+```
+
+### Q03
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q03: 최근 가입한 회원 3명을 조회합니다.
+SELECT id, name, joined_at FROM member ORDER BY joined_at DESC, id DESC LIMIT 3;
+id  name  joined_at 
+--  ----  ----------
+10  회원10  2026-09-04
+9   회원09  2026-09-03
+8   회원08  2026-09-02
+
+```
+
+### Q04
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q04: 2026-09-30 기준 미반납 연체 후보를 조회합니다.
+SELECT id, member_id, book_id, due_at FROM rental
+WHERE returned_at IS NULL AND due_at < '2026-09-30' ORDER BY due_at;
+id  member_id  book_id  due_at    
+--  ---------  -------  ----------
+3   2          2        2026-09-19
+9   8          9        2026-09-22
+7   6          7        2026-09-26
+
+```
