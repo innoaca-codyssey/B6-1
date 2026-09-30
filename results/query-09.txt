@@ -1,0 +1,19 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q09: 회원별 대여 건수를 집계합니다.
+SELECT m.name, COUNT(r.id) AS rentals FROM member m
+LEFT JOIN rental r ON r.member_id = m.id
+GROUP BY m.id, m.name ORDER BY rentals DESC, m.id;
+name  rentals
+----  -------
+회원01  2      
+회원02  2      
+회원03  2      
+회원05  2      
+회원04  1      
+회원06  1      
+회원07  1      
+회원08  1      
+회원09  0      
+회원10  0      
+

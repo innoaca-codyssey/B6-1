@@ -1,0 +1,10 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q12: NOT EXISTS 서브쿼리로 대여 기록이 없는 회원을 찾습니다.
+SELECT m.id, m.name FROM member m
+WHERE NOT EXISTS (SELECT 1 FROM rental r WHERE r.member_id = m.id) ORDER BY m.id;
+id  name
+--  ----
+9   회원09
+10  회원10
+

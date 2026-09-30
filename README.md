@@ -200,3 +200,85 @@ name    title      status
 데이터베이스  SQL 연습     returned
 
 ```
+
+### Q09
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q09: 회원별 대여 건수를 집계합니다.
+SELECT m.name, COUNT(r.id) AS rentals FROM member m
+LEFT JOIN rental r ON r.member_id = m.id
+GROUP BY m.id, m.name ORDER BY rentals DESC, m.id;
+name  rentals
+----  -------
+회원01  2      
+회원02  2      
+회원03  2      
+회원05  2      
+회원04  1      
+회원06  1      
+회원07  1      
+회원08  1      
+회원09  0      
+회원10  0      
+
+```
+
+### Q10
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q10: 카테고리별 도서 대체 구입비를 합산합니다.
+SELECT c.name, SUM(b.replacement_cost) AS total_cost FROM category c
+INNER JOIN book b ON b.category_id = c.id
+GROUP BY c.id, c.name ORDER BY total_cost DESC, c.id;
+name    total_cost
+------  ----------
+프로그래밍   54000     
+데이터베이스  49000     
+운영체제    30000     
+네트워크    28000     
+자료구조    26000     
+과학      24000     
+경제      20000     
+수학      18000     
+역사      16000     
+소설      14000     
+
+```
+
+### Q11
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q11: 회원별 반납 도서의 평균 대여 일수를 계산합니다.
+-- SQLite 전용 julianday는 ISO 날짜를 일 단위 숫자로 변환합니다.
+SELECT m.name, AVG(julianday(r.returned_at) - julianday(r.borrowed_at)) AS average_days
+FROM member m INNER JOIN rental r ON r.member_id = m.id
+WHERE r.returned_at IS NOT NULL GROUP BY m.id, m.name ORDER BY m.id;
+name  average_days
+----  ------------
+회원01  9.0         
+회원02  10.0        
+회원03  10.0        
+회원05  9.0         
+
+```
+
+### Q12
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q12: NOT EXISTS 서브쿼리로 대여 기록이 없는 회원을 찾습니다.
+SELECT m.id, m.name FROM member m
+WHERE NOT EXISTS (SELECT 1 FROM rental r WHERE r.member_id = m.id) ORDER BY m.id;
+id  name
+--  ----
+9   회원09
+10  회원10
+
+```

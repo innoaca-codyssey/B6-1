@@ -1,0 +1,19 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q10: 카테고리별 도서 대체 구입비를 합산합니다.
+SELECT c.name, SUM(b.replacement_cost) AS total_cost FROM category c
+INNER JOIN book b ON b.category_id = c.id
+GROUP BY c.id, c.name ORDER BY total_cost DESC, c.id;
+name    total_cost
+------  ----------
+프로그래밍   54000     
+데이터베이스  49000     
+운영체제    30000     
+네트워크    28000     
+자료구조    26000     
+과학      24000     
+경제      20000     
+수학      18000     
+역사      16000     
+소설      14000     
+

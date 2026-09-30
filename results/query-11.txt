@@ -1,0 +1,14 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q11: 회원별 반납 도서의 평균 대여 일수를 계산합니다.
+-- SQLite 전용 julianday는 ISO 날짜를 일 단위 숫자로 변환합니다.
+SELECT m.name, AVG(julianday(r.returned_at) - julianday(r.borrowed_at)) AS average_days
+FROM member m INNER JOIN rental r ON r.member_id = m.id
+WHERE r.returned_at IS NOT NULL GROUP BY m.id, m.name ORDER BY m.id;
+name  average_days
+----  ------------
+회원01  9.0         
+회원02  10.0        
+회원03  10.0        
+회원05  9.0         
+
