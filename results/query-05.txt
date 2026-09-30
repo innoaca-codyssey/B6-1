@@ -1,0 +1,20 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q05: 각 도서의 카테고리를 INNER JOIN으로 조회합니다.
+SELECT b.title, c.name AS category FROM book b
+INNER JOIN category c ON c.id = b.category_id ORDER BY b.id;
+title      category
+---------  --------
+Python 기초  프로그래밍   
+운영체제 입문    운영체제    
+SQL 시작     데이터베이스  
+네트워크 원리    네트워크    
+자료구조 연습    자료구조    
+수학 이야기     수학      
+역사 읽기      역사      
+짧은 소설      소설      
+경제 이해      경제      
+과학 탐구      과학      
+Python 활용  프로그래밍   
+SQL 연습     데이터베이스  
+

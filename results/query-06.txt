@@ -1,0 +1,17 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q06: 회원과 도서를 연결해 미반납 대여 내역을 조회합니다.
+SELECT m.name, b.title, r.due_at FROM rental r
+INNER JOIN member m ON m.id = r.member_id
+INNER JOIN book b ON b.id = r.book_id
+WHERE r.returned_at IS NULL ORDER BY r.id;
+name  title      due_at    
+----  ---------  ----------
+회원01  SQL 시작     2026-10-04
+회원02  운영체제 입문    2026-09-19
+회원04  자료구조 연습    2026-10-09
+회원06  역사 읽기      2026-09-26
+회원07  짧은 소설      2026-10-07
+회원08  경제 이해      2026-09-22
+회원03  Python 활용  2026-10-02
+

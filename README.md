@@ -100,3 +100,103 @@ id  member_id  book_id  due_at
 7   6          7        2026-09-26
 
 ```
+
+### Q05
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q05: 각 도서의 카테고리를 INNER JOIN으로 조회합니다.
+SELECT b.title, c.name AS category FROM book b
+INNER JOIN category c ON c.id = b.category_id ORDER BY b.id;
+title      category
+---------  --------
+Python 기초  프로그래밍   
+운영체제 입문    운영체제    
+SQL 시작     데이터베이스  
+네트워크 원리    네트워크    
+자료구조 연습    자료구조    
+수학 이야기     수학      
+역사 읽기      역사      
+짧은 소설      소설      
+경제 이해      경제      
+과학 탐구      과학      
+Python 활용  프로그래밍   
+SQL 연습     데이터베이스  
+
+```
+
+### Q06
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q06: 회원과 도서를 연결해 미반납 대여 내역을 조회합니다.
+SELECT m.name, b.title, r.due_at FROM rental r
+INNER JOIN member m ON m.id = r.member_id
+INNER JOIN book b ON b.id = r.book_id
+WHERE r.returned_at IS NULL ORDER BY r.id;
+name  title      due_at    
+----  ---------  ----------
+회원01  SQL 시작     2026-10-04
+회원02  운영체제 입문    2026-09-19
+회원04  자료구조 연습    2026-10-09
+회원06  역사 읽기      2026-09-26
+회원07  짧은 소설      2026-10-07
+회원08  경제 이해      2026-09-22
+회원03  Python 활용  2026-10-02
+
+```
+
+### Q07
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q07: 대여 기록이 없는 회원도 LEFT JOIN에 포함합니다.
+SELECT m.name, r.id AS rental_id FROM member m
+LEFT JOIN rental r ON r.member_id = m.id ORDER BY m.id, r.id;
+name  rental_id
+----  ---------
+회원01  1        
+회원01  2        
+회원02  3        
+회원02  10       
+회원03  4        
+회원03  11       
+회원04  5        
+회원05  6        
+회원05  12       
+회원06  7        
+회원07  8        
+회원08  9        
+회원09           
+회원10           
+
+```
+
+### Q08
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q08: 카테고리와 도서, 대여 상태를 함께 조회합니다.
+SELECT c.name, b.title, r.status FROM category c
+INNER JOIN book b ON b.category_id = c.id
+INNER JOIN rental r ON r.book_id = b.id ORDER BY r.id;
+name    title      status  
+------  ---------  --------
+프로그래밍   Python 기초  returned
+데이터베이스  SQL 시작     borrowed
+운영체제    운영체제 입문    borrowed
+네트워크    네트워크 원리    returned
+자료구조    자료구조 연습    borrowed
+수학      수학 이야기     returned
+역사      역사 읽기      borrowed
+소설      짧은 소설      borrowed
+경제      경제 이해      borrowed
+과학      과학 탐구      returned
+프로그래밍   Python 활용  borrowed
+데이터베이스  SQL 연습     returned
+
+```

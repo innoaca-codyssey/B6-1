@@ -1,0 +1,22 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q07: 대여 기록이 없는 회원도 LEFT JOIN에 포함합니다.
+SELECT m.name, r.id AS rental_id FROM member m
+LEFT JOIN rental r ON r.member_id = m.id ORDER BY m.id, r.id;
+name  rental_id
+----  ---------
+회원01  1        
+회원01  2        
+회원02  3        
+회원02  10       
+회원03  4        
+회원03  11       
+회원04  5        
+회원05  6        
+회원05  12       
+회원06  7        
+회원07  8        
+회원08  9        
+회원09           
+회원10           
+
