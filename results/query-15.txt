@@ -1,0 +1,8 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q15: 회원과 상태로 자주 조회하므로 해당 컬럼에 복합 인덱스를 만듭니다.
+CREATE INDEX idx_rental_member_status ON rental(member_id, status);
+-- SQLite 전용 EXPLAIN QUERY PLAN으로 인덱스 적용을 확인합니다.
+EXPLAIN QUERY PLAN SELECT id FROM rental WHERE member_id = 2 AND status = 'overdue';
+QUERY PLAN
+`--SEARCH rental USING COVERING INDEX idx_rental_member_status (member_id=? AND status=?)

@@ -1,0 +1,10 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q14: 보관 기간이 지난 반납 기록을 삭제합니다.
+-- SQLite 3.35 이상 RETURNING은 삭제한 행을 반환합니다.
+DELETE FROM rental WHERE returned_at < '2026-09-01'
+RETURNING id, member_id, returned_at;
+id  member_id  returned_at
+--  ---------  -----------
+10  2          2026-06-20 
+

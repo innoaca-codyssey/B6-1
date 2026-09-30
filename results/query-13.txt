@@ -1,0 +1,13 @@
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q13: 미반납이면서 기한이 지난 대여를 overdue로 변경합니다.
+-- SQLite 3.35 이상 RETURNING은 변경한 행을 반환합니다.
+UPDATE rental SET status = 'overdue'
+WHERE returned_at IS NULL AND due_at < '2026-09-30'
+RETURNING id, status;
+id  status 
+--  -------
+3   overdue
+7   overdue
+9   overdue
+

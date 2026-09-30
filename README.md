@@ -282,3 +282,49 @@ id  name
 10  회원10
 
 ```
+
+### Q13
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q13: 미반납이면서 기한이 지난 대여를 overdue로 변경합니다.
+-- SQLite 3.35 이상 RETURNING은 변경한 행을 반환합니다.
+UPDATE rental SET status = 'overdue'
+WHERE returned_at IS NULL AND due_at < '2026-09-30'
+RETURNING id, status;
+id  status 
+--  -------
+3   overdue
+7   overdue
+9   overdue
+
+```
+
+### Q14
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q14: 보관 기간이 지난 반납 기록을 삭제합니다.
+-- SQLite 3.35 이상 RETURNING은 삭제한 행을 반환합니다.
+DELETE FROM rental WHERE returned_at < '2026-09-01'
+RETURNING id, member_id, returned_at;
+id  member_id  returned_at
+--  ---------  -----------
+10  2          2026-06-20 
+
+```
+
+### Q15
+
+```bash
+$ sqlite3 -bail -header -column -echo ../lab/library.db
+PRAGMA foreign_keys = ON;
+-- Q15: 회원과 상태로 자주 조회하므로 해당 컬럼에 복합 인덱스를 만듭니다.
+CREATE INDEX idx_rental_member_status ON rental(member_id, status);
+-- SQLite 전용 EXPLAIN QUERY PLAN으로 인덱스 적용을 확인합니다.
+EXPLAIN QUERY PLAN SELECT id FROM rental WHERE member_id = 2 AND status = 'overdue';
+QUERY PLAN
+`--SEARCH rental USING COVERING INDEX idx_rental_member_status (member_id=? AND status=?)
+```
