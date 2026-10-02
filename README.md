@@ -371,3 +371,63 @@ SELECT는 조회, INSERT는 새 행 추가, UPDATE는 상태 수정, DELETE는 �
 엑셀에서도 행을 연결할 수 있지만 DB는 FK와 제약조건으로 잘못된 참조를 거부하고 여러 변경을 트랜잭션으로 묶을 수 있습니다. seed.sql은 BEGIN/COMMIT으로 부모와 자식의 입력을 한 작업으로 처리합니다.
 
 SQLite FK 활성화 정책은 [공식 문서](https://www.sqlite.org/foreignkeys.html)에 설명되어 있습니다.
+
+## 보너스: 같은 요구의 두 쿼리와 핵심 지표
+
+```bash
+$ mkdir -p ../lab; sqlite3 ../lab/bonus.db < schema.sql; sqlite3 ../lab/bonus.db < seed.sql; sqlite3 -header -column -echo ../lab/bonus.db < bonus.sql
+-- 실행 기준: schema.sql + seed.sql 직후의 변경하지 않은 데이터.
+-- 1. 프로그래밍 도서: JOIN으로 카테고리 이름과 연결합니다.
+SELECT b.id, b.title FROM book b JOIN category c ON c.id = b.category_id
+WHERE c.name = '프로그래밍' ORDER BY b.id;
+id  title    
+--  ---------
+1   Python 기초
+11  Python 활용
+-- 같은 요구를 IN 서브쿼리로 풉니다.
+SELECT id, title FROM book WHERE category_id IN
+(SELECT id FROM category WHERE name = '프로그래밍') ORDER BY id;
+id  title    
+--  ---------
+1   Python 기초
+11  Python 활용
+
+-- 2. 지표 1: 대여가 발생한 월의 대여 건수. strftime은 SQLite 전용입니다.
+SELECT strftime('%Y-%m', borrowed_at) AS month, COUNT(*) AS rentals
+FROM rental GROUP BY strftime('%Y-%m', borrowed_at) ORDER BY month;
+month    rentals
+-------  -------
+2026-06  1      
+2026-09  11     
+
+-- 3. 지표 2: 누적 대여 횟수 상위 10권. 동률이면 book.id 오름차순입니다.
+SELECT b.id, b.title, COUNT(r.id) AS rentals
+FROM book b LEFT JOIN rental r ON r.book_id = b.id
+GROUP BY b.id, b.title ORDER BY rentals DESC, b.id LIMIT 10;
+id  title      rentals
+--  ---------  -------
+1   Python 기초  1      
+2   운영체제 입문    1      
+3   SQL 시작     1      
+4   네트워크 원리    1      
+5   자료구조 연습    1      
+6   수학 이야기     1      
+7   역사 읽기      1      
+8   짧은 소설      1      
+9   경제 이해      1      
+10  과학 탐구      1      
+
+-- 4. 지표 3: 기준일 현재 미반납 대여 중 기한이 지난 비율.
+-- 고정 기준일 2026-09-30. 분모는 전체 12건이 아닌 미반납 7건입니다.
+-- status 문자열 대신 due_at을 비교합니다. 분모 0이면 비율은 NULL입니다.
+SELECT COUNT(*) AS active_rentals,
+SUM(CASE WHEN due_at < '2026-09-30' THEN 1 ELSE 0 END) AS overdue_rentals,
+ROUND(100.0 * SUM(CASE WHEN due_at < '2026-09-30' THEN 1 ELSE 0 END)
+/ NULLIF(COUNT(*), 0), 2) AS overdue_percent
+FROM rental WHERE returned_at IS NULL;
+active_rentals  overdue_rentals  overdue_percent
+--------------  ---------------  ---------------
+7               3                42.86          
+```
+
+프로그래밍 도서를 JOIN과 IN 서브쿼리로 조회하여 같은 2행을 얻었습니다. JOIN은 카테고리 열도 함께 출력하기 편하고, IN은 해당 분류에 속하는지 검사할 때 적합합니다. 부모 키와 카테고리 이름의 유일 제약으로 이 데이터에서는 중복 결과가 없습니다. 작은 샘플의 동일 결과만으로 두 방식의 속도 우열을 판단하지 않습니다. 월별 대여는 발생 월만 출력하여 6월 1건, 9월 11건입니다. 도서별 누적 횟수는 모든 도서가 1건으로 동률이므로 book.id로 TOP 10을 결정합니다. 미반납 연체율은 2026-09-30 기준 7건 중 3건, 42.86%입니다. 대여 0건이면 분모 0을 NULLIF로 처리합니다. seed.sql 직후의 데이터로 실행했으며 핵심 쿼리의 UPDATE/DELETE 결과와 혼합하지 않았습니다.
